@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema"
+             expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.flowable.org/processdef">
+
+    <!-- 请假审批流程 -->
+    <process id="leave_approval" name="请假审批流程" isExecutable="true">
+        <documentation>员工请假审批流程示例</documentation>
+
+        <!-- 开始事件 -->
+        <startEvent id="startEvent" name="开始" flowable:initiator="initiator"/>
+
+        <!-- 用户任务：填写请假单 -->
+        <userTask id="fillLeaveForm" name="填写请假单" flowable:assignee="${initiator}">
+            <documentation>请填写请假申请表单</documentation>
+        </userTask>
+
+        <!-- 用户任务：部门经理审批 -->
+        <userTask id="deptManagerApproval" name="部门经理审批" flowable:candidateGroups="dept_manager">
+            <documentation>部门经理审核请假申请</documentation>
+        </userTask>
+
+        <!-- 排他网关：判断请假天数 -->
+        <exclusiveGateway id="gateway1" name="判断请假天数"/>
+
+        <!-- 用户任务：总监审批（请假天数>3天） -->
+        <userTask id="directorApproval" name="总监审批" flowable:candidateGroups="director">
+            <documentation>总监审核超过3天的请假申请</documentation>
+        </userTask>
+
+        <!-- 用户任务：HR备案 -->
+        <userTask id="hrRecord" name="HR备案" flowable:candidateGroups="hr">
+            <documentation>HR进行请假备案</documentation>
+        </userTask>
+
+        <!-- 结束事件 -->
+        <endEvent id="endEvent" name="结束"/>
+
+        <!-- 流程连线 -->
+        <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="fillLeaveForm"/>
+        <sequenceFlow id="flow2" sourceRef="fillLeaveForm" targetRef="deptManagerApproval"/>
+        <sequenceFlow id="flow3" sourceRef="deptManagerApproval" targetRef="gateway1"/>
+        
+        <!-- 条件：请假天数>3天 -->
+        <sequenceFlow id="flow4" sourceRef="gateway1" targetRef="directorApproval">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${days > 3}]]></conditionExpression>
+        </sequenceFlow>
+        
+        <!-- 条件：请假天数<=3天 -->
+        <sequenceFlow id="flow5" sourceRef="gateway1" targetRef="hrRecord">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${days <= 3}]]></conditionExpression>
+        </sequenceFlow>
+        
+        <sequenceFlow id="flow6" sourceRef="directorApproval" targetRef="hrRecord"/>
+        <sequenceFlow id="flow7" sourceRef="hrRecord" targetRef="endEvent"/>
+    </process>
+
+    <!-- 图形信息 -->
+    <bpmndi:BPMNDiagram id="BPMNDiagram_leave_approval">
+        <bpmndi:BPMNPlane bpmnElement="leave_approval" id="BPMNPlane_leave_approval">
+            <bpmndi:BPMNShape bpmnElement="startEvent" id="BPMNShape_startEvent">
+                <omgdc:Bounds height="30.0" width="30.0" x="100.0" y="163.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="fillLeaveForm" id="BPMNShape_fillLeaveForm">
+                <omgdc:Bounds height="80.0" width="100.0" x="195.0" y="138.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="deptManagerApproval" id="BPMNShape_deptManagerApproval">
+                <omgdc:Bounds height="80.0" width="100.0" x="360.0" y="138.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="gateway1" id="BPMNShape_gateway1" isMarkerVisible="true">
+                <omgdc:Bounds height="40.0" width="40.0" x="525.0" y="158.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="directorApproval" id="BPMNShape_directorApproval">
+                <omgdc:Bounds height="80.0" width="100.0" x="630.0" y="58.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="hrRecord" id="BPMNShape_hrRecord">
+                <omgdc:Bounds height="80.0" width="100.0" x="630.0" y="208.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endEvent" id="BPMNShape_endEvent">
+                <omgdc:Bounds height="28.0" width="28.0" x="795.0" y="234.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+                <omgdi:waypoint x="130.0" y="178.0"/>
+                <omgdi:waypoint x="195.0" y="178.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
+                <omgdi:waypoint x="295.0" y="178.0"/>
+                <omgdi:waypoint x="360.0" y="178.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+                <omgdi:waypoint x="460.0" y="178.0"/>
+                <omgdi:waypoint x="525.0" y="178.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
+                <omgdi:waypoint x="545.0" y="158.0"/>
+                <omgdi:waypoint x="545.0" y="98.0"/>
+                <omgdi:waypoint x="630.0" y="98.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
+                <omgdi:waypoint x="545.0" y="198.0"/>
+                <omgdi:waypoint x="545.0" y="248.0"/>
+                <omgdi:waypoint x="630.0" y="248.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+                <omgdi:waypoint x="730.0" y="98.0"/>
+                <omgdi:waypoint x="780.0" y="98.0"/>
+                <omgdi:waypoint x="780.0" y="248.0"/>
+                <omgdi:waypoint x="730.0" y="248.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
+                <omgdi:waypoint x="730.0" y="248.0"/>
+                <omgdi:waypoint x="795.0" y="248.0"/>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</definitions>
